@@ -18,7 +18,12 @@ mongoose
   )
   .then(() => console.log('Connected!'));
 
-app.use(cors());
+app.use(
+  cors({
+    methods: 'GET, POST, PUT, DELETE',
+    origin: '*',
+  })
+);
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
