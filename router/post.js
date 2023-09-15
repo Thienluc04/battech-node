@@ -171,9 +171,11 @@ router.post('/', checkDataPost, async (req, res) => {
   });
 });
 
-router.get('/:id', async (req, res) => {
-  const id = req.params.id;
-  const data = await PostModel.findById(id);
+router.get('/:slug', async (req, res) => {
+  const slug = req.params.slug;
+  const data = await PostModel.findOne({
+    slug,
+  });
   res.json(data);
 });
 
