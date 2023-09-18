@@ -240,6 +240,16 @@ router.delete('/', async (req, res) => {
   const listId = req.body.listId;
   try {
     listId.forEach(async (id) => {
+      const post = await PostModel.findById(id);
+      if (!post)
+        return res.status(403).json({
+          messageError: 'Something went wrong',
+        });
+      const topic = await TopicModel.findOne({ name: post.topic });
+      await TopicModel.findByIdAndUpdate(topic.id, {
+        postNumber: topic.postNumber - 1,
+      });
+
       await PostModel.deleteOne({ _id: id });
     });
 
@@ -248,7 +258,6 @@ router.delete('/', async (req, res) => {
     });
   } catch (error) {
     return res.status(403).json({
-      statusCode: 403,
       messageError: 'Something went wrong',
     });
   }
