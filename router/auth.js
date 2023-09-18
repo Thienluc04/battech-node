@@ -29,7 +29,7 @@ function verifyToken(req, res, next) {
 function generateToken(payload) {
   const { id } = payload;
   const accessToken = jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: '30s',
+    expiresIn: '5m',
   });
   const refreshToken = jwt.sign({ id }, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn: '24h',
