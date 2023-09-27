@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const nodeMailer = require('nodemailer');
 const AccountModel = require('../models/account');
+const jwt = require('jsonwebtoken');
 
 let randomCode = Math.floor(Math.random() * (9999 - 1000) + 1000);
 
@@ -35,10 +36,12 @@ router.post('/check-email', async (req, res) => {
       html,
     });
 
+    const hashEmail = jwt.sign(email, process.env.RESET_PASS);
+
     if (info) {
       return res.json({
         message: 'Đã gửi mã xác nhận về email của bạn',
-        data: email,
+        data: hashEmail,
       });
     } else {
       randomCode = Math.floor(Math.random() * (9999 - 1000) + 1000);
@@ -54,59 +57,46 @@ router.post('/check-email', async (req, res) => {
   }
 });
 
-function randomPass(length) {
-  let result = '';
-  const characters =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const charactersLength = characters.length;
-  let counter = 0;
-  while (counter < length) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    counter += 1;
-  }
-  return result;
-}
-
 router.post('/check-code', async (req, res) => {
   const code = req.body.code;
   const email = req.body.email;
   if (!code || !email) return res.sendStatus(401);
   if (code == randomCode) {
-    const password = randomPass(8);
-    await AccountModel.findOneAndUpdate(
-      { email },
-      {
-        password,
-      }
-    );
-    const transporter = nodeMailer.createTransport({
-      service: 'Gmail',
-      auth: {
-        user: 'nguyenthienluc2004@gmail.com',
-        pass: 'hczc osit veda krfd',
-      },
+    res.json({
+      message: 'Mã xác nhận trùng khớp',
+      data: email,
     });
-
-    const info = await transporter.sendMail({
-      from: { name: 'Battech', address: 'nguyenthienluc2004@gmail.com' },
-      to: email,
-      subject: 'Mật khẩu mới',
-      html: `<h1>Mật khẩu mới của bạn là:</h1>
-              <h2>${password}</h2>`,
+  } else {
+    res.status(403).json({
+      messageError: 'Mã xác nhận không trùng khớp',
     });
+  }
+});
 
-    if (info) {
-      return res.json({
-        message: 'Mật khẩu mới đã được gửi về email của bạn',
+router.post('/reset-pass', async (req, res) => {
+  const newPass = req.body.newPass;
+  const hashEmail = req.body.email;
+  if (!newPass) return res.sendStatus(401);
+  const email = jwt.verify(hashEmail, process.env.RESET_PASS);
+  if (email) {
+    try {
+      await AccountModel.findOneAndUpdate(
+        { email },
+        {
+          password: newPass,
+        }
+      );
+      res.json({
+        message: 'Đã thay đổi mật khẩu. Vui lòng đăng nhập lại !',
       });
-    } else {
-      return res.status(500).json({
+    } catch (error) {
+      res.status(500).json({
         messageError: 'Something went wrong',
       });
     }
   } else {
     res.status(403).json({
-      messageError: 'Mã xác nhận không trùng khớp',
+      messageError: 'Không tìm thấy email',
     });
   }
 });
