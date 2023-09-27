@@ -4,14 +4,10 @@ const nodeMailer = require('nodemailer');
 const AccountModel = require('../models/account');
 const jwt = require('jsonwebtoken');
 
-let randomCode = Math.floor(Math.random() * (9999 - 1000) + 1000);
-
-const html = `
-    <h1>Mã code của bạn là:</h1>
-    <h2>${randomCode}</h2>
-`;
+let randomCode;
 
 router.post('/check-email', async (req, res) => {
+  randomCode = Math.floor(Math.random() * (9999 - 1000) + 1000);
   const email = req.body.email;
   if (!email)
     return res.status(401).json({
@@ -28,6 +24,11 @@ router.post('/check-email', async (req, res) => {
         pass: 'hczc osit veda krfd',
       },
     });
+
+    const html = `
+    <h1>Mã code của bạn là:</h1>
+    <h2>${randomCode}</h2>
+    `;
 
     const info = await transporter.sendMail({
       from: { name: 'Battech', address: 'nguyenthienluc2004@gmail.com' },
@@ -87,7 +88,7 @@ router.post('/reset-pass', async (req, res) => {
         }
       );
       res.json({
-        message: 'Đã thay đổi mật khẩu. Vui lòng đăng nhập lại !',
+        message: 'Đã thay đổi mật khẩu. Vui lòng đăng nhập lại',
       });
     } catch (error) {
       res.status(500).json({
